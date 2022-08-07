@@ -1,0 +1,174 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(car)
+library(MASS)
+library(e1071)
+library(tseries)
+library(ggfortify)
+library(rpart)
+library(caret)
+library(caretEnsemble)
+
+set.seed(1234)
+
+#fixing the regression coefficients
+b = rnorm(4,0,3)
+
+#Generating the independent variables (Covariates) and error
+
+x1 = rnorm(10000, 100, 9)
+x2 = rnorm(10000, 50, 64)
+x3 = rnorm(10000, 125, 16)
+e = rnorm(10000, 0, 4)
+
+#Generating the dependent variable (b0, b1, b2, b3)
+
+y = b[1] + (b[2]*x1) + (b[3]*x2) + (b[4]*x3) + e
+#rpart
+d = data.frame(x1, x2, x3, y)
+traing_set <- d[1:9000,]
+test_set <- d[9001:10000,]
+train1 <- train(y~x1+x2+x3, traing_set, method = "rpart")
+pred_1 <- predict(train1, test_set)
+pred_1t <- predict(train1, traing_set)
+trainLM = lm(y~x1+x2+x3, traing_set)
+pred_2 = predict(trainLM, test_set)
+pred_2t <- predict(trainLM, traing_set)
+mse1 = mean((pred_1 - test_set$y)^2)
+mse2 = mean((pred_2 - test_set$y)^2)
+mse1t = mean((pred_1t - traing_set$y)^2)
+mse2t = mean((pred_2t - traing_set$y)^2)
+mae1 = mean(abs(pred_1 - test_set$y))
+mae2 = mean(abs(pred_2 - test_set$y))
+mae1t = mean(abs(pred_1t - traing_set$y))
+mae2t = mean(abs(pred_2t - traing_set$y))
+mape1 = mean(abs((pred_1 - test_set$y)/test_set$y))
+mape2 = mean(abs((pred_2 - test_set$y)/test_set$y))
+mape1t = mean(abs((pred_1t - traing_set$y)/traing_set$y))
+mape2t = mean(abs((pred_2t - traing_set$y)/traing_set$y))
+train3 <- train(y~x1+x2+x3, traing_set, method = "rf")
+pred_3 <- predict(train3, test_set)
+pred_3t <- predict(train3, traing_set)
+mse3 = mean((pred_3 - test_set$y)^2)
+mae3 = mean(abs(pred_3 - test_set$y))
+mape3 = mean(abs((pred_3 - test_set$y)/test_set$y))
+mse3t = mean((pred_3t - traing_set$y)^2)
+mae3t = mean(abs(pred_3t - traing_set$y))
+mape3t = mean(abs((pred_3t - traing_set$y)/traing_set$y))
+train4 <- train(y~x1+x2+x3, traing_set, method = "treebag")
+pred_4 <- predict(train4, test_set)
+pred_4t <- predict(train4, traing_set)
+mse4 = mean((pred_4 - test_set$y)^2)
+mae4 = mean(abs(pred_4 - test_set$y))
+mape4 = mean(abs((pred_4 - test_set$y)/test_set$y))
+mse4t = mean((pred_4t - traing_set$y)^2)
+mae4t = mean(abs(pred_4t - traing_set$y))
+mape4t = mean(abs((pred_4t - traing_set$y)/traing_set$y))
+train5 <- train(y~x1+x2+x3, traing_set, method = "gbm")
+pred_5 <- predict(train5, test_set)
+pred_5t <- predict(train5, traing_set)
+mse5 = mean((pred_5 - test_set$y)^2)
+mae5 = mean(abs(pred_5 - test_set$y))
+mape5 = mean(abs((pred_5 - test_set$y)/test_set$y))
+mse5t = mean((pred_5t - traing_set$y)^2)
+mae5t = mean(abs(pred_5t - traing_set$y))
+mape5t = mean(abs((pred_5t - traing_set$y)/traing_set$y))
+train6 <- caretList(y~x1+x2+x3, traing_set, methodList = c("rpart", "rf", "svmLinear"))
+pred_6 <- predict(train6, test_set)
+pred_6t <- predict(train6, traing_set)
+mse6 = mean((pred_6 - test_set$y)^2)
+mae6 = mean(abs(pred_6 - test_set$y))
+mape6 = mean(abs((pred_6 - test_set$y)/test_set$y))
+mse6t = mean((pred_6t - traing_set$y)^2)
+mae6t = mean(abs(pred_6t - traing_set$y))
+mape6t = mean(abs((pred_6t - traing_set$y)/traing_set$y))
+```
+
+
+```{r}
+library(car)
+library(MASS)
+library(e1071)
+library(tseries)
+library(ggfortify)
+library(rpart)
+library(caret)
+library(caretEnsemble)
+
+set.seed(1234)
+
+#fixing the regression coefficients
+b = rnorm(4,0,3)
+
+#Generating the independent variables (Covariates) and error
+
+x1 = rnorm(10000, 100, 9)
+x2 = rnorm(10000, 50, 64)
+x3 = rnorm(10000, 125, 16)
+e = rnorm(10000, 0, 4)
+
+#Generating the dependent variable (b0, b1, b2, b3)
+
+y1 = b[1] + (b[2]*(x1)^2) + (b[3]*(x2)^2) + (b[4]*(x3)^2) + e
+#rpart
+d1 = data.frame(x1, x2, x3, y1)
+traing_set1 <- d1[1:9000,]
+test_set1 <- d1[9001:10000,]
+train11 <- train(y1~x1+x2+x3, traing_set1, method = "rpart")
+pred_11 <- predict(train11, test_set1)
+pred_1t1 <- predict(train11, traing_set1)
+trainLM1= lm(y1~x1+x2+x3, traing_set1)
+pred_21 = predict(trainLM1, test_set1)
+pred_2t1 <- predict(trainLM1, traing_set1)
+mse11 = mean((pred_11 - test_set1$y1)^2)
+mse21 = mean((pred_21 - test_set1$y1)^2)
+mse1t1 = mean((pred_1t1 - traing_set1$y1)^2)
+mse2t1 = mean((pred_2t1 - traing_set1$y1)^2)
+mae11 = mean(abs(pred_11 - test_set1$y1))
+mae21 = mean(abs(pred_21 - test_set1$y1))
+mae1t1 = mean(abs(pred_1t1 - traing_set1$y1))
+mae2t1 = mean(abs(pred_2t1 - traing_set1$y1))
+mape11 = mean(abs((pred_11 - test_set1$y1)/test_set1$y1))
+mape21 = mean(abs((pred_21 - test_set1$y1)/test_set1$y1))
+mape1t1 = mean(abs((pred_1t1 - traing_set1$y1)/traing_set1$y1))
+mape2t1 = mean(abs((pred_2t1 - traing_set1$y1)/traing_set1$y1))
+train31 <- train(y1~x1+x2+x3, traing_set1, method = "rf")
+pred_31 <- predict(train31, test_set1)
+pred_3t1 <- predict(train31, traing_set1)
+mse31 = mean((pred_31 - test_set1$y1)^2)
+mae31 = mean(abs(pred_31 - test_set1$y1))
+mape31 = mean(abs((pred_31 - test_set1$y1)/test_set1$y1))
+mse3t1 = mean((pred_3t1 - traing_set1$y1)^2)
+mae3t1 = mean(abs(pred_3t1 - traing_set1$y1))
+mape3t1 = mean(abs((pred_3t1 - traing_set1$y1)/traing_set1$y1))
+train41 <- train(y1~x1+x2+x3, traing_set1, method = "treebag")
+pred_41 <- predict(train41, test_set1)
+pred_4t1 <- predict(train41, traing_set1)
+mse41 = mean((pred_41 - test_set1$y1)^2)
+mae41 = mean(abs(pred_41 - test_set1$y1))
+mape41 = mean(abs((pred_41 - test_set1$y1)/test_set1$y1))
+mse4t1 = mean((pred_4t1 - traing_set1$y1)^2)
+mae4t1 = mean(abs(pred_4t1 - traing_set1$y1))
+mape4t1 = mean(abs((pred_4t1 - traing_set1$y1)/traing_set1$y1))
+train51 <- train(y1~x1+x2+x3, traing_set1, method = "gbm")
+pred_51 <- predict(train51, test_set1)
+pred_5t1 <- predict(train51, traing_set1)
+mse51 = mean((pred_51 - test_set1$y1)^2)
+mae51 = mean(abs(pred_51 - test_set1$y1))
+mape51 = mean(abs((pred_51 - test_set1$y1)/test_set1$y1))
+mse5t1 = mean((pred_5t1 - traing_set1$y1)^2)
+mae5t1 = mean(abs(pred_5t1 - traing_set1$y1))
+mape5t1 = mean(abs((pred_5t1 - traing_set1$y1)/traing_set1$y1))
+train61 <- caretList(y1~x1+x2+x3, traing_set1, methodList = c("rpart", "rf", "svmLinear"))
+pred_61 <- predict(train61, test_set1)
+pred_6t1 <- predict(train61, traing_set1)
+mse61 = mean((pred_61 - test_set1$y1)^2)
+mae61 = mean(abs(pred_61 - test_set1$y1))
+mape61 = mean(abs((pred_61 - test_set1$y1)/test_set1$y1))
+mse6t1 = mean((pred_6t1 - traing_set1$y1)^2)
+mae6t1 = mean(abs(pred_6t1 - traing_set1$y1))
+mape6t1 = mean(abs((pred_6t1 - traing_set1$y1)/traing_set1$y1))
+```

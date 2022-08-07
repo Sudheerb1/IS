@@ -1,0 +1,190 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(car)
+library(MASS)
+library(e1071)
+library(tseries)
+library(ggfortify)
+
+set.seed(1234)
+
+#fixing the regression coefficients
+b = rnorm(4,0,3)
+
+#Generating the independent variables (Covariates) and error
+
+x1 = runif(10000, 0, 100)
+x2 = runif(10000, 0, 100)
+x3 = runif(10000, 0, 100)
+e = rnorm(10000, 0, 4)
+
+#Generating the dependent variable (b0, b1, b2, b3)
+
+y1 = b[1] + (b[2]*x1) + (b[3]*x2) + (b[4]*x3) + e
+#Linear SVM model
+d = data.frame(x1, x2, x3, y1)
+traing_set <- d[1:9000,]
+test_set <- d[9001:10000,]
+m1_train = svm(y1~x1+x2+x3, traing_set, kernel = "linear", scale = FALSE, nu = 0.1)
+summary(m1_train)
+p1 = predict(m1_train, test_set)
+#linear regression
+m2_train = lm(y1~x1+x2+x3, traing_set)
+summary(m2_train)
+p2 = predict(m2_train, test_set)
+mse1 = mean((p1 - test_set$y1)^2)
+mse2 = mean((p2 - test_set$y1)^2)
+mae1 = mean(abs(p1 - test_set$y1))
+mae2 = mean(abs(p2 - test_set$y1))
+mape1 = mean(abs((p1 - test_set$y1)/test_set$y1))
+mape2 = mean(abs((p2 - test_set$y1)/test_set$y1))
+#polynomial SVM model
+m1p_train = svm(y1~x1+x2+x3, traing_set, kernel = "polynomial", scale = FALSE, nu = 0.1, degree = 1)
+summary(m1p_train)
+p1p = predict(m1p_train, test_set)
+mse1p = mean((p1p - test_set$y1)^2)
+mae1p = mean(abs(p1p - test_set$y1))
+mape1p = mean(abs((p1p - test_set$y1)/test_set$y1))
+#radial SVM model
+m1r_train = svm(y1~x1+x2+x3, traing_set, kernel = "radial", scale = FALSE, nu = 0.1)
+summary(m1r_train)
+p1r = predict(m1r_train, test_set)
+mse1r = mean((p1r - test_set$y1)^2)
+mae1r = mean(abs(p1r - test_set$y1))
+mape1r = mean(abs((p1r - test_set$y1)/test_set$y1))
+#sigmoid SVM model
+m1s_train = svm(y1~x1+x2+x3, traing_set, kernel = "sigmoid", scale = FALSE, nu = 0.1)
+summary(m1s_train)
+p1s = predict(m1s_train, test_set)
+mse1s = mean((p1s - test_set$y1)^2)
+mae1s = mean(abs(p1s - test_set$y1))
+mape1s = mean(abs((p1s - test_set$y1)/test_set$y1))
+```
+
+```{r}
+library(car)
+library(MASS)
+library(e1071)
+library(tseries)
+library(ggfortify)
+
+set.seed(1234)
+
+#fixing the regression coefficients
+b = rnorm(4,0,3)
+
+#Generating the independent variables (Covariates) and error
+
+x1 = runif(10000, 0, 100)
+x2 = runif(10000, 0, 100)
+x3 = runif(10000, 0, 100)
+e = rnorm(10000, 0, 4)
+
+#Generating the dependent variable (b0, b1, b2, b3)
+
+y2 = b[1] + (b[2]*(x1^2)) + (b[3]*(x2^2)) + (b[4]*(x3^2)) + e
+#Linear SVM model
+d1 = data.frame(x1, x2, x3, y2)
+traing_set1 <- d1[1:9000,]
+test_set1 <- d1[9001:10000,]
+m1_train1 = svm(y2~x1+x2+x3, traing_set1, kernel = "linear", scale = FALSE)
+summary(m1_train1)
+p11 = predict(m1_train1, test_set1)
+#linear regression
+m2_train1 = lm(y2~x1+x2+x3, traing_set1)
+summary(m2_train1)
+p21 = predict(m2_train1, test_set1)
+mse11 = mean((p11 - test_set1$y2)^2)
+mse21 = mean((p21 - test_set1$y2)^2)
+mae11 = mean(abs(p11 - test_set1$y2))
+mae21 = mean(abs(p21 - test_set1$y2))
+mape11 = mean(abs((p11 - test_set1$y2)/test_set1$y2))
+mape21 = mean(abs((p21 - test_set1$y2)/test_set1$y2))
+#polynomial SVM model
+m1p_train1 = svm(y2~x1+x2+x3, traing_set1, kernel = "polynomial", scale = FALSE, degree = 2)
+summary(m1p_train1)
+p1p1 = predict(m1p_train1, test_set1)
+mse1p1 = mean((p1p1 - test_set1$y2)^2)
+mae1p1 = mean(abs(p1p1 - test_set1$y2))
+mape1p1 = mean(abs((p1p1 - test_set1$y2)/test_set1$y2))
+#radial SVM model
+m1r_train1 = svm(y2~x1+x2+x3, traing_set1, kernel = "radial", scale = FALSE)
+summary(m1r_train1)
+p1r1 = predict(m1r_train1, test_set1)
+mse1r1 = mean((p1r1 - test_set1$y2)^2)
+mae1r1 = mean(abs(p1r1 - test_set1$y2))
+mape1r1 = mean(abs((p1p1 - test_set1$y2)/test_set1$y2))
+#sigmoid SVM model
+m1s_train1 = svm(y2~x1+x2+x3, traing_set1, kernel = "sigmoid", scale = FALSE)
+summary(m1s_train1)
+p1s1 = predict(m1s_train1, test_set1)
+mse1s1 = mean((p1s1 - test_set1$y2)^2)
+mae1s1 = mean(abs(p1s1 - test_set1$y2))
+mape1s1 = mean(abs((p1s1 - test_set1$y2)/test_set1$y2))
+
+```
+
+```{r}
+library(car)
+library(MASS)
+library(e1071)
+library(tseries)
+library(ggfortify)
+
+set.seed(1234)
+
+#fixing the regression coefficients
+b = rnorm(4,0,3)
+
+#Generating the independent variables (Covariates) and error
+
+x1 = runif(10000, 0, 100)
+x2 = runif(10000, 0, 100)
+x3 = runif(10000, 0, 100)
+e = rnorm(10000, 0, 4)
+
+#Generating the dependent variable (b0, b1, b2, b3)
+
+y3 = b[1] + (b[2]*(x1^3)) + (b[3]*(x2^3)) + (b[4]*(x3^3)) + e
+#Linear SVM model
+d2 = data.frame(x1, x2, x3, y3)
+traing_set2 <- d2[1:9000,]
+test_set2 <- d2[9001:10000,]
+m1_train2 = svm(y3~x1+x2+x3, traing_set2, kernel = "linear", scale = FALSE, nu = 0.1)
+summary(m1_train2)
+p12 = predict(m1_train2, test_set2)
+#linear regression
+m2_train2 = lm(y3~x1+x2+x3, traing_set2)
+summary(m2_train2)
+p22 = predict(m2_train2, test_set2)
+mse12 = mean((p12 - test_set2$y3)^2)
+mse22 = mean((p22 - test_set2$y3)^2)
+mae12 = mean(abs(p12 - test_set2$y3))
+mae22 = mean(abs(p22 - test_set2$y3))
+mape12 = mean(abs((p12 - test_set2$y3)/test_set2$y3))
+mape22 = mean(abs((p22 - test_set2$y3)/test_set2$y3))
+#polynomial SVM model
+m1p_train2 = svm(y3~x1+x2+x3, traing_set2, kernel = "polynomial", scale = FALSE, nu = 0.1)
+summary(m1p_train2)
+p1p2 = predict(m1p_train2, test_set2)
+mse1p2 = mean((p1p2 - test_set2$y3)^2)
+mae1p2 = mean(abs(p1p2 - test_set2$y3))
+mape1p2 = mean(abs((p1p2 - test_set2$y3)/test_set2$y3))
+#radial SVM model
+m1r_train2 = svm(y3~x1+x2+x3, traing_set2, kernel = "radial", scale = FALSE, nu = 0.1)
+summary(m1r_train2)
+p1r2 = predict(m1r_train2, test_set2)
+mse1r2 = mean((p1r2 - test_set2$y3)^2)
+mae1r2 = mean(abs(p1r2 - test_set2$y3))
+mape1r2 = mean(abs((p1p2 - test_set2$y3)/test_set2$y3))
+#sigmoid SVM model
+m1s_train2 = svm(y3~x1+x2+x3, traing_set2, kernel = "sigmoid", scale = FALSE, nu = 0.1)
+summary(m1s_train2)
+p1s2 = predict(m1s_train2, test_set2)
+mse1s2 = mean((p1s2 - test_set2$y3)^2)
+mae1s2 = mean(abs(p1s2 - test_set2$y3))
+mape1s2 = mean(abs((p1s2 - test_set2$y3)/test_set2$y3))
+```
