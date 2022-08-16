@@ -1,0 +1,1026 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(readxl)
+library(GGally)
+library(car)
+library(ggpubr)
+library(ggrepel)
+library(MASS)
+library(readr)
+library(e1071)
+library(caret)
+library(tseries)
+library(ggfortify)
+library(rpart)
+library(caretEnsemble)
+#importing data
+HousePriceData <- read_csv("C:/Users/BSK/Downloads/true_data.csv")
+View(HousePriceData)
+colnames(HousePriceData)
+
+
+#factoring variables
+HousePriceData$POSTED_BY <- as.factor(HousePriceData$POSTED_BY)
+HousePriceData$UNDER_CONSTRUCTION <- as.factor(HousePriceData$UNDER_CONSTRUCTION)
+HousePriceData$RERA <- as.factor(HousePriceData$RERA)
+HousePriceData$READY_TO_MOVE <- as.factor(HousePriceData$READY_TO_MOVE)
+HousePriceData$RESALE <- as.factor(HousePriceData$RESALE)
+HousePriceData$BHK_OR_RK <- as.factor(HousePriceData$BHK_OR_RK)
+HousePriceData$ADDRESS <- as.factor(HousePriceData$ADDRESS)
+
+
+#dividing the data set into training and test datasets
+train_HousePriceData <- HousePriceData %>% filter(TEST==0)
+test_HousePriceData <- HousePriceData %>% filter(TEST==1)
+
+
+#Ordinary least Squares regression
+Model0 <- lm(LTARGET.PRICE_IN_LACS. ~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData)
+pred <- predict(Model0, test_HousePriceData)
+view(pred)
+pred0 <- predict(Model0, train_HousePriceData)
+view(pred0)
+#prediction error on test data set
+MSE_Reg <- mean((pred - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_Reg <- mean(abs(pred - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_Reg <- mean(abs((pred - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_Reg0 <- mean((pred0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_Reg0 <- mean(abs(pred0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_Reg0 <- mean(abs((pred0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart ensemble algorithm
+modelrp1 <- train(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, method = "rpart")
+predrp1 <- predict(modelrp1, test_HousePriceData)
+view(predrp1)
+predrp10 <- predict(modelrp1, train_HousePriceData)
+view(predrp10)
+#prediction error on test data set
+MSE_rp1 <- mean((predrp1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_rp1 <- mean(abs(predrp1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_rp1 <- mean(abs((predrp1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_rp10 <- mean((predrp10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_rp10 <- mean(abs(predrp10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_rp10 <- mean(abs((predrp10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#random forest ensemble algorithm
+modelrf1 <- train(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, method = "rf")
+predrf1 <- predict(modelrf1, test_HousePriceData)
+view(predrf1)
+predrf10 <- predict(modelrf1, train_HousePriceData)
+view(predrf10)
+#prediction error on test data set
+MSE_rf1 <- mean((predrf1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_rf1 <- mean(abs(predrf1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_rf1 <- mean(abs((predrf1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_rf10 <- mean((predrf10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_rf10 <- mean(abs(predrf10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_rf10 <- mean(abs((predrf10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag ensemble algorithm
+modeltb1 <- train(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, method = "treebag")
+predtb1 <- predict(modeltb1, test_HousePriceData)
+view(predtb1)
+predtb10 <- predict(modeltb1, train_HousePriceData)
+view(predtb10)
+#prediction error on test data set
+MSE_tb1 <- mean((predtb1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_tb1 <- mean(abs(predtb1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_tb1 <- mean(abs((predtb1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_tb10 <- mean((predtb10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_tb10 <- mean(abs(predtb10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_tb10 <- mean(abs((predtb10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#gbm ensemble algorithm
+modelgb1 <- train(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, method = "gbm")
+predgb1 <- predict(modelgb1, test_HousePriceData)
+view(predgb1)
+predgb10 <- predict(modelgb1, train_HousePriceData)
+view(predgb10)
+#prediction error on test data set
+MSE_gb1 <- mean((predgb1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gb1 <- mean(abs(predgb1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gb1 <- mean(abs((predgb1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_gb10 <- mean((predgb10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gb10 <- mean(abs(predgb10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gb10 <- mean(abs((predgb10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+SVMLinear ensemble algorithm
+modelRPSVM1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart", "svmLinear"))
+predRPSVM1 <- predict(modelRPSVM1, test_HousePriceData)
+view(predRPSVM1)
+predRPSVM10 <- predict(modelRPSVM1, train_HousePriceData)
+view(predRPSVM10)
+#prediction error on test data set
+MSE_RPSVM1 <- mean((predRPSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPSVM1 <- mean(abs(predRPSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPSVM1 <- mean(abs((predRPSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPSVM10 <- mean((predRPSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPSVM10 <- mean(abs(predRPSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPSVM10 <- mean(abs((predRPSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#randomforest+SVMLinear ensemble algorithm
+modelRFSVM1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf", "svmLinear"))
+predRFSVM1 <- predict(modelRFSVM1, test_HousePriceData)
+view(predRFSVM1)
+predRFSVM10 <- predict(modelRFSVM1, train_HousePriceData)
+view(predRFSVM10)
+#prediction error on test data set
+MSE_RFSVM1 <- mean((predRFSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFSVM1 <- mean(abs(predRFSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFSVM1 <- mean(abs((predRFSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFSVM10 <- mean((predRFSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFSVM10 <- mean(abs(predRFSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFSVM10 <- mean(abs((predRFSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag+SVMLinear ensemble algorithm
+modeltrSVM1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("treebag", "svmLinear"))
+predtrSVM1 <- predict(modeltrSVM1, test_HousePriceData)
+view(predtrSVM1)
+predtrSVM10 <- predict(modeltrSVM1, train_HousePriceData)
+view(predtrSVM10)
+#prediction error on test data set
+MSE_trSVM1 <- mean((predtrSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trSVM1 <- mean(abs(predtrSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trSVM1 <- mean(abs((predtrSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_trSVM10 <- mean((predtrSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trSVM10 <- mean(abs(predtrSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trSVM10 <- mean(abs((predtrSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#gbm+SVMLinear ensemble algorithm
+modelgbSVM1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("gbm", "svmLinear"))
+predgbSVM1 <- predict(modelgbSVM1, test_HousePriceData)
+view(predgbSVM1)
+predgbSVM10 <- predict(modelgbSVM1, train_HousePriceData)
+view(predgbSVM10)
+#prediction error on test data set
+MSE_gbSVM1 <- mean((predgbSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gbSVM1 <- mean(abs(predgbSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gbSVM1 <- mean(abs((predgbSVM1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_gbSVM10 <- mean((predgbSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gbSVM10 <- mean(abs(predgbSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gbSVM10 <- mean(abs((predgbSVM10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+
+#rpart+SVMPolynomial ensemble algorithm
+modelRPSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart", "svmPoly"))
+predRPSVMP1 <- predict(modelRPSVMP1, test_HousePriceData)
+view(predRPSVMP1)
+predRPSVMP10 <- predict(modelRPSVMP1, train_HousePriceData)
+view(predRPSVMP10)
+#prediction error on test data set
+MSE_RPSVMP1 <- mean((predRPSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPSVMP1 <- mean(abs(predRPSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPSVMP1 <- mean(abs((predRPSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPSVMP10 <- mean((predRPSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPSVMP10 <- mean(abs(predRPSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPSVMP10 <- mean(abs((predRPSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+
+#randomforest+SVMPoly ensemble algorithm
+modelRFSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf", "svmPoly"))
+predRFSVMP1 <- predict(modelRFSVMP1, test_HousePriceData)
+view(predRFSVMP1)
+predRFSVMP10 <- predict(modelRFSVMP1, train_HousePriceData)
+view(predRFSVMP10)
+#prediction error on test data set
+MSE_RFSVMP1 <- mean((predRFSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFSVMP1 <- mean(abs(predRFSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFSVMP1 <- mean(abs((predRFSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFSVMP10 <- mean((predRFSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFSVMP10 <- mean(abs(predRFSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFSVMP10 <- mean(abs((predRFSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag+SVMPoly ensemble algorithm
+modeltrSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("treebag", "svmPoly"))
+predtrSVMP1 <- predict(modeltrSVMP1, test_HousePriceData)
+view(predtrSVMP1)
+predtrSVMP10 <- predict(modeltrSVMP1, train_HousePriceData)
+view(predtrSVMP10)
+#prediction error on test data set
+MSE_trSVMP1 <- mean((predtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trSVMP1 <- mean(abs(predtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trSVMP1 <- mean(abs((predtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_trSVMP10 <- mean((predtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trSVMP10 <- mean(abs(predtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trSVMP10 <- mean(abs((predtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#gbm+SVMPolynomial ensemble algorithm
+modelgbSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("gbm", "svmPoly"))
+predgbSVMP1 <- predict(modelgbSVMP1, test_HousePriceData)
+view(predgbSVMP1)
+predgbSVMP10 <- predict(modelgbSVMP1, train_HousePriceData)
+view(predgbSVMP10)
+#prediction error on test data set
+MSE_gbSVMP1 <- mean((predgbSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gbSVMP1 <- mean(abs(predgbSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gbSVMP1 <- mean(abs((predgbSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_gbSVMP10 <- mean((predgbSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gbSVMP10 <- mean(abs(predgbSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gbSVMP10 <- mean(abs((predgbSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+SVMRadial ensemble algorithm
+modelRPSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart", "svmRadial"))
+predRPSVMR1 <- predict(modelRPSVMR1, test_HousePriceData)
+view(predRPSVMR1)
+predRPSVMR10 <- predict(modelRPSVMR1, train_HousePriceData)
+view(predRPSVMR10)
+#prediction error on test data set
+MSE_RPSVMR1 <- mean((predRPSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPSVMR1 <- mean(abs(predRPSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPSVMR1 <- mean(abs((predRPSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPSVMR10 <- mean((predRPSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPSVMR10 <- mean(abs(predRPSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPSVMR10 <- mean(abs((predRPSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+
+#randomforest+SVMRadial ensemble algorithm
+modelRFSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf", "svmRadial"))
+predRFSVMR1 <- predict(modelRFSVMR1, test_HousePriceData)
+view(predRFSVMR1)
+predRFSVMR10 <- predict(modelRFSVMR1, train_HousePriceData)
+view(predRFSVMR10)
+#prediction error on test data set
+MSE_RFSVMR1 <- mean((predRFSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFSVMR1 <- mean(abs(predRFSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFSVMR1 <- mean(abs((predRFSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFSVMR10 <- mean((predRFSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFSVMR10 <- mean(abs(predRFSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFSVMR10 <- mean(abs((predRFSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag+SVMPoly ensemble algorithm
+modeltrSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("treebag", "svmRadial"))
+predtrSVMR1 <- predict(modeltrSVMR1, test_HousePriceData)
+view(predtrSVMR1)
+predtrSVMR10 <- predict(modeltrSVMR1, train_HousePriceData)
+view(predtrSVMR10)
+#prediction error on test data set
+MSE_trSVMR1 <- mean((predtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trSVMR1 <- mean(abs(predtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trSVMR1 <- mean(abs((predtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_trSVMR10 <- mean((predtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trSVMR10 <- mean(abs(predtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trSVMR10 <- mean(abs((predtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#gbm+SVMRadial ensemble algorithm
+modelgbSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("gbm", "svmRadial"))
+predgbSVMR1 <- predict(modelgbSVMR1, test_HousePriceData)
+view(predgbSVMR1)
+predgbSVMR10 <- predict(modelgbSVMR1, train_HousePriceData)
+view(predgbSVMR10)
+#prediction error on test data set
+MSE_gbSVMR1 <- mean((predgbSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gbSVMR1 <- mean(abs(predgbSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gbSVMR1 <- mean(abs((predgbSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_gbSVMR10 <- mean((predgbSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_gbSVMR10 <- mean(abs(predgbSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_gbSVMR10 <- mean(abs((predgbSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+randomforest+SVMLinear ensemble algorithm
+modelRPRFSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf", "svmLinear"))
+predRPRFSVML1 <- predict(modelRPRFSVML1, test_HousePriceData)
+view(predRPRFSVML1)
+predRPRFSVML10 <- predict(modelRPRFSVML1, train_HousePriceData)
+view(predRPRFSVML10)
+#prediction error on test data set
+MSE_RPRFSVML1 <- mean((predRPRFSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFSVML1 <- mean(abs(predRPRFSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFSVML1 <- mean(abs((predRPRFSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFSVML10 <- mean((predRPRFSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFSVML10 <- mean(abs(predRPRFSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFSVML10 <- mean(abs((predRPRFSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+randomforest+SVMPolynomial ensemble algorithm
+modelRPRFSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf", "svmPoly"))
+predRPRFSVMP1 <- predict(modelRPRFSVMP1, test_HousePriceData)
+view(predRPRFSVMP1)
+predRPRFSVMP10 <- predict(modelRPRFSVMP1, train_HousePriceData)
+view(predRPRFSVMP10)
+#prediction error on test data set
+MSE_RPRFSVMP1 <- mean((predRPRFSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFSVMP1 <- mean(abs(predRPRFSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFSVMP1 <- mean(abs((predRPRFSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFSVMP10 <- mean((predRPRFSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFSVMP10 <- mean(abs(predRPRFSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFSVMP10 <- mean(abs((predRPRFSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+randomforest+SVMRadial ensemble algorithm
+modelRPRFSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf", "svmRadial"))
+predRPRFSVMR1 <- predict(modelRPRFSVMR1, test_HousePriceData)
+view(predRPRFSVMR1)
+predRPRFSVMR10 <- predict(modelRPRFSVMR1, train_HousePriceData)
+view(predRPRFSVMR10)
+#prediction error on test data set
+MSE_RPRFSVMR1 <- mean((predRPRFSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFSVMR1 <- mean(abs(predRPRFSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFSVMR1 <- mean(abs((predRPRFSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFSVMR10 <- mean((predRPRFSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFSVMR10 <- mean(abs(predRPRFSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFSVMR10 <- mean(abs((predRPRFSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag+SVMLinear ensemble algorithm
+modelRPtrSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","treebag", "svmLinear"))
+predRPtrSVML1 <- predict(modelRPtrSVML1, test_HousePriceData)
+view(predRPtrSVML1)
+predRPtrSVML10 <- predict(modelRPtrSVML1, train_HousePriceData)
+view(predRPtrSVML10)
+#prediction error on test data set
+MSE_RPtrSVML1 <- mean((predRPtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrSVML1 <- mean(abs(predRPtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrSVML1 <- mean(abs((predRPtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtrSVML10 <- mean((predRPtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrSVML10 <- mean(abs(predRPtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrSVML10 <- mean(abs((predRPtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag+SVMPolynomial ensemble algorithm
+modelRPtrSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","treebag", "svmPoly"))
+predRPtrSVMP1 <- predict(modelRPtrSVMP1, test_HousePriceData)
+view(predRPtrSVMP1)
+predRPtrSVMP10 <- predict(modelRPtrSVMP1, train_HousePriceData)
+view(predRPtrSVMP10)
+#prediction error on test data set
+MSE_RPtrSVMP1 <- mean((predRPtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrSVMP1 <- mean(abs(predRPtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrSVMP1 <- mean(abs((predRPtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtrSVMP10 <- mean((predRPtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrSVMP10 <- mean(abs(predRPtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrSVMP10 <- mean(abs((predRPtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag+SVMRadial ensemble algorithm
+modelRPtrSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","treebag", "svmRadial"))
+predRPtrSVMR1 <- predict(modelRPtrSVMR1, test_HousePriceData)
+view(predRPtrSVMR1)
+predRPtrSVMR10 <- predict(modelRPtrSVMR1, train_HousePriceData)
+view(predRPtrSVMR10)
+#prediction error on test data set
+MSE_RPtrSVMR1 <- mean((predRPtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrSVMR1 <- mean(abs(predRPtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrSVMR1 <- mean(abs((predRPtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtrSVMR10 <- mean((predRPtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrSVMR10 <- mean(abs(predRPtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrSVMR10 <- mean(abs((predRPtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+GBM+SVMLinear ensemble algorithm
+modelRPGBSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","gbm", "svmLinear"))
+predRPGBSVML1 <- predict(modelRPGBSVML1, test_HousePriceData)
+view(predRPGBSVML1)
+predRPGBSVML10 <- predict(modelRPGBSVML1, train_HousePriceData)
+view(predRPGBSVML10)
+#prediction error on test data set
+MSE_RPGBSVML1 <- mean((predRPGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGBSVML1 <- mean(abs(predRPGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGBSVML1 <- mean(abs((predRPGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPGBSVML10 <- mean((predRPGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGBSVML10 <- mean(abs(predRPGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGBSVML10 <- mean(abs((predRPGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+GBM+SVMPolynomial ensemble algorithm
+modelRPGBSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","gbm", "svmPoly"))
+predRPGBSVMP1 <- predict(modelRPGBSVMP1, test_HousePriceData)
+view(predRPGBSVMP1)
+predRPGBSVMP10 <- predict(modelRPGBSVMP1, train_HousePriceData)
+view(predRPGBSVMP10)
+#prediction error on test data set
+MSE_RPGBSVMP1 <- mean((predRPGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGBSVMP1 <- mean(abs(predRPGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGBSVMP1 <- mean(abs((predRPGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPGBSVMP10 <- mean((predRPGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGBSVMP10 <- mean(abs(predRPGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGBSVMP10 <- mean(abs((predRPGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+GBM+SVMRadial ensemble algorithm
+modelRPGBSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","gbm", "svmRadial"))
+predRPGBSVMR1 <- predict(modelRPGBSVMR1, test_HousePriceData)
+view(predRPGBSVMR1)
+predRPGBSVMR10 <- predict(modelRPGBSVMR1, train_HousePriceData)
+view(predRPGBSVMR10)
+#prediction error on test data set
+MSE_RPGBSVMR1 <- mean((predRPGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGBSVMR1 <- mean(abs(predRPGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGBSVMR1 <- mean(abs((predRPGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPGBSVMR10 <- mean((predRPGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGBSVMR10 <- mean(abs(predRPGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGBSVMR10 <- mean(abs((predRPGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+treebag+SVMLinear ensemble algorithm
+modelRFtrSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","treebag", "svmLinear"))
+predRFtrSVML1 <- predict(modelRFtrSVML1, test_HousePriceData)
+view(predRFtrSVML1)
+predRFtrSVML10 <- predict(modelRFtrSVML1, train_HousePriceData)
+view(predRFtrSVML10)
+#prediction error on test data set
+MSE_RFtrSVML1 <- mean((predRFtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrSVML1 <- mean(abs(predRFtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrSVML1 <- mean(abs((predRFtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtrSVML10 <- mean((predRFtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrSVML10 <- mean(abs(predRFtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrSVML10 <- mean(abs((predRFtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+treebag+SVMPolynomial ensemble algorithm
+modelRFtrSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","treebag", "svmPoly"))
+predRFtrSVMP1 <- predict(modelRFtrSVMP1, test_HousePriceData)
+view(predRFtrSVMP1)
+predRFtrSVMP10 <- predict(modelRFtrSVMP1, train_HousePriceData)
+view(predRFtrSVMP10)
+#prediction error on test data set
+MSE_RFtrSVMP1 <- mean((predRFtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrSVMP1 <- mean(abs(predRFtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrSVMP1 <- mean(abs((predRFtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtrSVMP10 <- mean((predRFtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrSVMP10 <- mean(abs(predRFtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrSVMP10 <- mean(abs((predRFtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+treebag+SVMRadial ensemble algorithm
+modelRFtrSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","treebag", "svmRadial"))
+predRFtrSVMR1 <- predict(modelRFtrSVMR1, test_HousePriceData)
+view(predRFtrSVMR1)
+predRFtrSVMR10 <- predict(modelRFtrSVMR1, train_HousePriceData)
+view(predRFtrSVMR10)
+#prediction error on test data set
+MSE_RFtrSVMR1 <- mean((predRFtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrSVMR1 <- mean(abs(predRFtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrSVMR1 <- mean(abs((predRFtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtrSVMR10 <- mean((predRFtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrSVMR10 <- mean(abs(predRFtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrSVMR10 <- mean(abs((predRFtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+GBM+SVMLinear ensemble algorithm
+modelRFGBSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","gbm", "svmLinear"))
+predRFGBSVML1 <- predict(modelRFGBSVML1, test_HousePriceData)
+view(predRFGBSVML1)
+predRFGBSVML10 <- predict(modelRFGBSVML1, train_HousePriceData)
+view(predRFGBSVML10)
+#prediction error on test data set
+MSE_RFGBSVML1 <- mean((predRFGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGBSVML1 <- mean(abs(predRFGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGBSVML1 <- mean(abs((predRFGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFGBSVML10 <- mean((predRFGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGBSVML10 <- mean(abs(predRFGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGBSVML10 <- mean(abs((predRFGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+GBM+SVMPolynomial ensemble algorithm
+modelRFGBSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","gbm", "svmPoly"))
+predRFGBSVMP1 <- predict(modelRFGBSVMP1, test_HousePriceData)
+view(predRFGBSVMP1)
+predRFGBSVMP10 <- predict(modelRFGBSVMP1, train_HousePriceData)
+view(predRFGBSVMP10)
+#prediction error on test data set
+MSE_RFGBSVMP1 <- mean((predRFGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGBSVMP1 <- mean(abs(predRFGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGBSVMP1 <- mean(abs((predRFGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFGBSVMP10 <- mean((predRFGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGBSVMP10 <- mean(abs(predRFGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGBSVMP10 <- mean(abs((predRFGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+GBM+SVMRadial ensemble algorithm
+modelRFGBSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","gbm", "svmRadial"))
+predRFGBSVMR1 <- predict(modelRFGBSVMR1, test_HousePriceData)
+view(predRFGBSVMR1)
+predRFGBSVMR10 <- predict(modelRFGBSVMR1, train_HousePriceData)
+view(predRFGBSVMR10)
+#prediction error on test data set
+MSE_RFGBSVMR1 <- mean((predRFGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGBSVMR1 <- mean(abs(predRFGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGBSVMR1 <- mean(abs((predRFGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFGBSVMR10 <- mean((predRFGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGBSVMR10 <- mean(abs(predRFGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGBSVMR10 <- mean(abs((predRFGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag+GBM+SVMLinear ensemble algorithm
+modeltrGBSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("gbm","treebag", "svmLinear"))
+predtrGBSVML1 <- predict(modeltrGBSVML1, test_HousePriceData)
+view(predtrGBSVML1)
+predtrGBSVML10 <- predict(modeltrGBSVML1, train_HousePriceData)
+view(predtrGBSVML10)
+#prediction error on test data set
+MSE_trGBSVML1 <- mean((predtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGBSVML1 <- mean(abs(predtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGBSVML1 <- mean(abs((predtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_trGBSVML10 <- mean((predtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGBSVML10 <- mean(abs(predtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGBSVML10 <- mean(abs((predtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag+GBM+SVMPolynomial ensemble algorithm
+modeltrGBSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("gbm","treebag", "svmPoly"))
+predtrGBSVMP1 <- predict(modeltrGBSVMP1, test_HousePriceData)
+view(predtrGBSVMP1)
+predtrGBSVMP10 <- predict(modeltrGBSVMP1, train_HousePriceData)
+view(predtrGBSVMP10)
+#prediction error on test data set
+MSE_trGBSVMP1 <- mean((predtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGBSVMP1 <- mean(abs(predtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGBSVMP1 <- mean(abs((predtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_trGBSVMP10 <- mean((predtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGBSVMP10 <- mean(abs(predtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGBSVMP10 <- mean(abs((predtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag+GBM+SVMRadial ensemble algorithm
+modeltrGBSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("gbm","treebag", "svmRadial"))
+predtrGBSVMR1 <- predict(modeltrGBSVMR1, test_HousePriceData)
+view(predtrGBSVMR1)
+predtrGBSVMR10 <- predict(modeltrGBSVMR1, train_HousePriceData)
+view(predtrGBSVMR10)
+#prediction error on test data set
+MSE_trGBSVMR1 <- mean((predtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGBSVMR1 <- mean(abs(predtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGBSVMR1 <- mean(abs((predtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_trGBSVMR10 <- mean((predtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGBSVMR10 <- mean(abs(predtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGBSVMR10 <- mean(abs((predtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag+SVMLinear ensemble algorithm
+modelRPRFtrSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","treebag", "svmLinear"))
+predRPRFtrSVML1 <- predict(modelRPRFtrSVML1, test_HousePriceData)
+predRPRFtrSVML10 <- predict(modelRPRFtrSVML1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFtrSVML1 <- mean((predRPRFtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtrSVML1 <- mean(abs(predRPRFtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtrSVML1 <- mean(abs((predRPRFtrSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFtrSVML10 <- mean((predRPRFtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtrSVML10 <- mean(abs(predRPRFtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtrSVML10 <- mean(abs((predRPRFtrSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag+SVMPolynomial ensemble algorithm
+modelRPRFtrSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","treebag", "svmPoly"))
+predRPRFtrSVMP1 <- predict(modelRPRFtrSVMP1, test_HousePriceData)
+predRPRFtrSVMP10 <- predict(modelRPRFtrSVMP1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFtrSVMP1 <- mean((predRPRFtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtrSVMP1 <- mean(abs(predRPRFtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtrSVMP1 <- mean(abs((predRPRFtrSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFtrSVMP10 <- mean((predRPRFtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtrSVMP10 <- mean(abs(predRPRFtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtrSVMP10 <- mean(abs((predRPRFtrSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag+SVMRadial ensemble algorithm
+modelRPRFtrSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","treebag", "svmRadial"))
+predRPRFtrSVMR1 <- predict(modelRPRFtrSVMR1, test_HousePriceData)
+predRPRFtrSVMR10 <- predict(modelRPRFtrSVMR1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFtrSVMR1 <- mean((predRPRFtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtrSVMR1 <- mean(abs(predRPRFtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtrSVMR1 <- mean(abs((predRPRFtrSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFtrSVMR10 <- mean((predRPRFtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtrSVMR10 <- mean(abs(predRPRFtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtrSVMR10 <- mean(abs((predRPRFtrSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+GBM+SVMLinear ensemble algorithm
+modelRPRFGBSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","gbm", "svmLinear"))
+predRPRFGBSVML1 <- predict(modelRPRFGBSVML1, test_HousePriceData)
+predRPRFGBSVML10 <- predict(modelRPRFGBSVML1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFGBSVML1 <- mean((predRPRFGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGBSVML1 <- mean(abs(predRPRFGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGBSVML1 <- mean(abs((predRPRFGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFGBSVML10 <- mean((predRPRFGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGBSVML10 <- mean(abs(predRPRFGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGBSVML10 <- mean(abs((predRPRFGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+GBM+SVMPolynomial ensemble algorithm
+modelRPRFGBSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","gbm", "svmPoly"))
+predRPRFGBSVMP1 <- predict(modelRPRFGBSVMP1, test_HousePriceData)
+predRPRFGBSVMP10 <- predict(modelRPRFGBSVMP1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFGBSVMP1 <- mean((predRPRFGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGBSVMP1 <- mean(abs(predRPRFGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGBSVMP1 <- mean(abs((predRPRFGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFGBSVMP10 <- mean((predRPRFGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGBSVMP10 <- mean(abs(predRPRFGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGBSVMP10 <- mean(abs((predRPRFGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+GBM+SVMRadial ensemble algorithm
+modelRPRFGBSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","gbm", "svmRadial"))
+predRPRFGBSVMR1 <- predict(modelRPRFGBSVMR1, test_HousePriceData)
+predRPRFGBSVMR10 <- predict(modelRPRFGBSVMR1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFGBSVMR1 <- mean((predRPRFGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGBSVMR1 <- mean(abs(predRPRFGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGBSVMR1 <- mean(abs((predRPRFGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFGBSVMR10 <- mean((predRPRFGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGBSVMR10 <- mean(abs(predRPRFGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGBSVMR10 <- mean(abs((predRPRFGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag+GBM+SVMLinear ensemble algorithm
+modelRPtrGBSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","gbm","treebag", "svmLinear"))
+predRPtrGBSVML1 <- predict(modelRPtrGBSVML1, test_HousePriceData)
+predRPtrGBSVML10 <- predict(modelRPtrGBSVML1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPtrGBSVML1 <- mean((predRPtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGBSVML1 <- mean(abs(predRPtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGBSVML1 <- mean(abs((predRPtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtrGBSVML10 <- mean((predRPtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGBSVML10 <- mean(abs(predRPtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGBSVML10 <- mean(abs((predRPtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag+GBM+SVMPolynomial ensemble algorithm
+modelRPtrGBSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","gbm","treebag", "svmPoly"))
+predRPtrGBSVMP1 <- predict(modelRPtrGBSVMP1, test_HousePriceData)
+predRPtrGBSVMP10 <- predict(modelRPtrGBSVMP1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPtrGBSVMP1 <- mean((predRPtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGBSVMP1 <- mean(abs(predRPtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGBSVMP1 <- mean(abs((predRPtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtrGBSVMP10 <- mean((predRPtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGBSVMP10 <- mean(abs(predRPtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGBSVMP10 <- mean(abs((predRPtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag+GBM+SVMRadial ensemble algorithm
+modelRPtrGBSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","gbm","treebag", "svmRadial"))
+predRPtrGBSVMR1 <- predict(modelRPtrGBSVMR1, test_HousePriceData)
+predRPtrGBSVMR10 <- predict(modelRPtrGBSVMR1, train_HousePriceData)
+#prediction error on test data set
+MSE_RPtrGBSVMR1 <- mean((predRPtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGBSVMR1 <- mean(abs(predRPtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGBSVMR1 <- mean(abs((predRPtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtrGBSVMR10 <- mean((predRPtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGBSVMR10 <- mean(abs(predRPtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGBSVMR10 <- mean(abs((predRPtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+treebag+GBM+SVMLinear ensemble algorithm
+modelRFtrGBSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","gbm","treebag", "svmLinear"))
+predRFtrGBSVML1 <- predict(modelRFtrGBSVML1, test_HousePriceData)
+predRFtrGBSVML10 <- predict(modelRFtrGBSVML1, train_HousePriceData)
+#prediction error on test data set
+MSE_RFtrGBSVML1 <- mean((predRFtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGBSVML1 <- mean(abs(predRFtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGBSVML1 <- mean(abs((predRFtrGBSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtrGBSVML10 <- mean((predRFtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGBSVML10 <- mean(abs(predRFtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGBSVML10 <- mean(abs((predRFtrGBSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+treebag+GBM+SVMPolynomial ensemble algorithm
+modelRFtrGBSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","gbm","treebag", "svmPoly"))
+predRFtrGBSVMP1 <- predict(modelRFtrGBSVMP1, test_HousePriceData)
+predRFtrGBSVMP10 <- predict(modelRFtrGBSVMP1, train_HousePriceData)
+#prediction error on test data set
+MSE_RFtrGBSVMP1 <- mean((predRFtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGBSVMP1 <- mean(abs(predRFtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGBSVMP1 <- mean(abs((predRFtrGBSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtrGBSVMP10 <- mean((predRFtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGBSVMP10 <- mean(abs(predRFtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGBSVMP10 <- mean(abs((predRFtrGBSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+treebag+GBM+SVMRadial ensemble algorithm
+modelRFtrGBSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","gbm","treebag", "svmRadial"))
+predRFtrGBSVMR1 <- predict(modelRFtrGBSVMR1, test_HousePriceData)
+predRFtrGBSVMR10 <- predict(modelRFtrGBSVMR1, train_HousePriceData)
+#prediction error on test data set
+MSE_RFtrGBSVMR1 <- mean((predRFtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGBSVMR1 <- mean(abs(predRFtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGBSVMR1 <- mean(abs((predRFtrGBSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtrGBSVMR10 <- mean((predRFtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGBSVMR10 <- mean(abs(predRFtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGBSVMR10 <- mean(abs((predRFtrGBSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag+GBM+SVMLinear ensemble algorithm
+modelRRTGSVML1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","gbm","treebag", "svmLinear"))
+predRRTGSVML1 <- predict(modelRRTGSVML1, test_HousePriceData)
+predRRTGSVML10 <- predict(modelRRTGSVML1, train_HousePriceData)
+#prediction error on test data set
+MSE_RRTGSVML1 <- mean((predRRTGSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRTGSVML1 <- mean(abs(predRRTGSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRTGSVML1 <- mean(abs((predRRTGSVML1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RRTGSVML10 <- mean((predRRTGSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRTGSVML10 <- mean(abs(predRRTGSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRTGSVML10 <- mean(abs((predRRTGSVML10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag+GBM+SVMPolynomial ensemble algorithm
+modelRRTGSVMP1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","gbm","treebag", "svmPoly"))
+predRRTGSVMP1 <- predict(modelRRTGSVMP1, test_HousePriceData)
+predRRTGSVMP10 <- predict(modelRRTGSVMP1, train_HousePriceData)
+#prediction error on test data set
+MSE_RRTGSVMP1 <- mean((predRRTGSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRTGSVMP1 <- mean(abs(predRRTGSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRTGSVMP1 <- mean(abs((predRRTGSVMP1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RRTGSVMP10 <- mean((predRRTGSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRTGSVMP10 <- mean(abs(predRRTGSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRTGSVMP10 <- mean(abs((predRRTGSVMP10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag+GBM+SVMRadial ensemble algorithm
+modelRRTGSVMR1 <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","gbm","treebag", "svmRadial"))
+predRRTGSVMR1 <- predict(modelRRTGSVMR1, test_HousePriceData)
+predRRTGSVMR10 <- predict(modelRRTGSVMR1, train_HousePriceData)
+#prediction error on test data set
+MSE_RRTGSVMR1 <- mean((predRRTGSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRTGSVMR1 <- mean(abs(predRRTGSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRTGSVMR1 <- mean(abs((predRRTGSVMR1 - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RRTGSVMR10 <- mean((predRRTGSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRTGSVMR10 <- mean(abs(predRRTGSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRTGSVMR10 <- mean(abs((predRRTGSVMR10 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest ensemble algorithm
+modelRPRF <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf"))
+predRPRF <- predict(modelRPRF, test_HousePriceData)
+predRPRF0 <- predict(modelRPRF, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRF <- mean((predRPRF - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRF <- mean(abs(predRPRF - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRF <- mean(abs((predRPRF - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRF0 <- mean((predRPRF0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRF0 <- mean(abs(predRPRF0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRF0 <- mean(abs((predRPRF0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag ensemble algorithm
+modelRPtr <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","treebag"))
+predRPtr <- predict(modelRPtr, test_HousePriceData)
+predRPtr0 <- predict(modelRPtr, train_HousePriceData)
+#prediction error on test data set
+MSE_RPtr <- mean((predRPtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtr <- mean(abs(predRPtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtr <- mean(abs((predRPtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtr0 <- mean((predRPtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtr0 <- mean(abs(predRPtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtr0 <- mean(abs((predRPtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+GBM ensemble algorithm
+modelRPGB <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","gbm"))
+predRPGB <- predict(modelRPGB, test_HousePriceData)
+predRPGB0 <- predict(modelRPGB, train_HousePriceData)
+#prediction error on test data set
+MSE_RPGB <- mean((predRPGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGB <- mean(abs(predRPGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGB <- mean(abs((predRPGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPGB0 <- mean((predRPGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPGB0 <- mean(abs(predRPGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPGB0 <- mean(abs((predRPGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+treebag ensemble algorithm
+modelRFtr <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","treebag"))
+predRFtr <- predict(modelRFtr, test_HousePriceData)
+predRFtr0 <- predict(modelRFtr, train_HousePriceData)
+#prediction error on test data set
+MSE_RFtr <- mean((predRFtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtr <- mean(abs(predRFtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtr <- mean(abs((predRFtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtr0 <- mean((predRFtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtr0 <- mean(abs(predRFtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtr0 <- mean(abs((predRFtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomForest+GBM ensemble algorithm
+modelRFGB <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","gbm"))
+predRFGB <- predict(modelRFGB, test_HousePriceData)
+predRFGB0 <- predict(modelRFGB, train_HousePriceData)
+#prediction error on test data set
+MSE_RFGB <- mean((predRFGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGB <- mean(abs(predRFGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGB <- mean(abs((predRFGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFGB0 <- mean((predRFGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFGB0 <- mean(abs(predRFGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFGB0 <- mean(abs((predRFGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#treebag+GBM ensemble algorithm
+modeltrGB <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("treebag","gbm"))
+predtrGB <- predict(modeltrGB, test_HousePriceData)
+predtrGB0 <- predict(modeltrGB, train_HousePriceData)
+#prediction error on test data set
+MSE_trGB <- mean((predtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGB <- mean(abs(predtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGB <- mean(abs((predtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_trGB0 <- mean((predtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_trGB0 <- mean(abs(predtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_trGB0 <- mean(abs((predtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag ensemble algorithm
+modelRPRFtr <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","treebag"))
+predRPRFtr <- predict(modelRPRFtr, test_HousePriceData)
+predRPRFtr0 <- predict(modelRPRFtr, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFtr <- mean((predRPRFtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtr <- mean(abs(predRPRFtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtr <- mean(abs((predRPRFtr - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFtr0 <- mean((predRPRFtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFtr0 <- mean(abs(predRPRFtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFtr0 <- mean(abs((predRPRFtr0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+GBM ensemble algorithm
+modelRPRFGB <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","gbm"))
+predRPRFGB <- predict(modelRPRFGB, test_HousePriceData)
+predRPRFGB0 <- predict(modelRPRFGB, train_HousePriceData)
+#prediction error on test data set
+MSE_RPRFGB <- mean((predRPRFGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGB <- mean(abs(predRPRFGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGB <- mean(abs((predRPRFGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPRFGB0 <- mean((predRPRFGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPRFGB0 <- mean(abs(predRPRFGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPRFGB0 <- mean(abs((predRPRFGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+treebag+GBM ensemble algorithm
+modelRPtrGB <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","treebag","gbm"))
+predRPtrGB <- predict(modelRPtrGB, test_HousePriceData)
+predRPtrGB0 <- predict(modelRPtrGB, train_HousePriceData)
+#prediction error on test data set
+MSE_RPtrGB <- mean((predRPtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGB <- mean(abs(predRPtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGB <- mean(abs((predRPtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RPtrGB0 <- mean((predRPtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RPtrGB0 <- mean(abs(predRPtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RPtrGB0 <- mean(abs((predRPtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#RandomFOrest+treebag+GBM ensemble algorithm
+modelRFtrGB <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rf","treebag","gbm"))
+predRFtrGB <- predict(modelRFtrGB, test_HousePriceData)
+predRFtrGB0 <- predict(modelRFtrGB, train_HousePriceData)
+#prediction error on test data set
+MSE_RFtrGB <- mean((predRFtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGB <- mean(abs(predRFtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGB <- mean(abs((predRFtrGB - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RFtrGB0 <- mean((predRFtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RFtrGB0 <- mean(abs(predRFtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RFtrGB0 <- mean(abs((predRFtrGB0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#rpart+RandomForest+treebag+GBM ensemble algorithm
+modelRRtG <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("rpart","rf","treebag","gbm"))
+predRRtG <- predict(modelRRtG, test_HousePriceData)
+predRRtG0 <- predict(modelRRtG, train_HousePriceData)
+#prediction error on test data set
+MSE_RRtG <- mean((predRRtG - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRtG <- mean(abs(predRRtG - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRtG <- mean(abs((predRRtG - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_RRtG0 <- mean((predRRtG0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_RRtG0 <- mean(abs(predRRtG0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_RRtG0 <- mean(abs((predRRtG0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#SVMLinear+SVmPoly ensemble algorithm
+modelSVMLP <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("svmLinear","svmPoly"))
+predSVMLP <- predict(modelSVMLP, test_HousePriceData)
+predSVMLP0 <- predict(modelSVMLP, train_HousePriceData)
+#prediction error on test data set
+MSE_SVMLP <- mean((predSVMLP - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMLP <- mean(abs(predSVMLP - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMLP <- mean(abs((predSVMLP - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_SVMLP0 <- mean((predSVMLP0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMLP0 <- mean(abs(predSVMLP0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMLP0 <- mean(abs((predSVMLP0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#SVMPoly+SVMRadial ensemble algorithm
+modelSVMPR <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("svmPoly","svmRadial"))
+predSVMPR <- predict(modelSVMPR, test_HousePriceData)
+predSVMPR0 <- predict(modelSVMPR, train_HousePriceData)
+#prediction error on test data set
+MSE_SVMPR <- mean((predSVMPR - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMPR <- mean(abs(predSVMPR - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMPR <- mean(abs((predSVMPR - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_SVMPR0 <- mean((predSVMPR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMPR0 <- mean(abs(predSVMPR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMPR0 <- mean(abs((predSVMPR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#SVMLinear+SVmRadial ensemble algorithm
+modelSVMLR <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("svmLinear","svmRadial"))
+predSVMLR <- predict(modelSVMLR, test_HousePriceData)
+predSVMLR0 <- predict(modelSVMLR, train_HousePriceData)
+#prediction error on test data set
+MSE_SVMLR <- mean((predSVMLR - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMLR <- mean(abs(predSVMLR - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMLR <- mean(abs((predSVMLR - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_SVMLR0 <- mean((predSVMLR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMLR0 <- mean(abs(predSVMLR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMLR0 <- mean(abs((predSVMLR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+
+
+#SVMLinear+SVmPoly+SVMRadial ensemble algorithm
+modelSVMLPR <- caretList(LTARGET.PRICE_IN_LACS.~ POSTED_BY + UNDER_CONSTRUCTION + RERA + READY_TO_MOVE + RESALE + BHK_NO. + SQUARE_FT + LONGITUDE + LATITUDE, train_HousePriceData, methodList = c("svmLinear","svmPoly", "svmRadial"))
+predSVMLPR <- predict(modelSVMLPR, test_HousePriceData)
+predSVMLPR0 <- predict(modelSVMLPR, train_HousePriceData)
+#prediction error on test data set
+MSE_SVMLPR <- mean((predSVMLPR - test_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMLPR <- mean(abs(predSVMLPR - test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMLPR <- mean(abs((predSVMLPR - test_HousePriceData$LTARGET.PRICE_IN_LACS.)/test_HousePriceData$LTARGET.PRICE_IN_LACS.))
+#prediction error on training data set
+MSE_SVMLPR0 <- mean((predSVMLPR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)^2)
+MAE_SVMLPR0 <- mean(abs(predSVMLPR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+MAPE_SVMLPR0 <- mean(abs((predSVMLPR0 - train_HousePriceData$LTARGET.PRICE_IN_LACS.)/train_HousePriceData$LTARGET.PRICE_IN_LACS.))
+```
+
